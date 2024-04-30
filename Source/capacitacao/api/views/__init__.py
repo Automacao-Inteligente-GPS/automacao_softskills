@@ -1,0 +1,1 @@
+from .autoavaliacao import AutoavaliacaoViewSet
