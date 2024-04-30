@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: Automação Soft Skills API
+  version: 1.0.0
+  description: API do projeto Automação Soft Skills 4.0
+paths:
+  /api/capacitacao/autoavaliacao_notas/:
+    post:
+      operationId: api_capacitacao_autoavaliacao_notas_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAutoavaliacao'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAutoavaliacao'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAutoavaliacao'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAutoavaliacao'
+          description: ''
+components:
+  schemas:
+    CreateAutoavaliacao:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        unidade:
+          type: integer
+      required:
+      - id
+      - unidade
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
