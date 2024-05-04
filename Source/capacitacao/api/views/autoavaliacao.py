@@ -25,7 +25,7 @@ class AutoavaliacaoViewSet(ModelViewSet):
         _serializer_data = _serializer(data=_data)
 
         if _serializer_data.is_valid():
-            _autoavaliacao = _serializer_data.save()
+            _autoavaliacao = _serializer_data.save(usuario_logado=request.user)
             _autoavaliacao.cadastrado_por = request.user
             _autoavaliacao.atualizado_por = request.user
             _autoavaliacao.save()
