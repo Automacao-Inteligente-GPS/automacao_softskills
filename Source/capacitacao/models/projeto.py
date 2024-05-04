@@ -10,6 +10,8 @@ class Projeto(models.Model):
     # campos
     nome = models.CharField(max_length=100, null=True)
     tipo = models.CharField(verbose_name='Tipo do Projeto', max_length=1, choices=TIPO, null=True)
+    mentor = models.ForeignKey(
+        to='capacitacao.Mentor', on_delete=models.PROTECT, related_name='projetos', null=True)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     autalizado_em = models.DateTimeField(auto_now=True)
     cadastrado_por = models.ForeignKey(to='auth.User', on_delete=models.PROTECT, related_name='projetos_cadastrados',

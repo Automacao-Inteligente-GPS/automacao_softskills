@@ -8,9 +8,6 @@ class Discente(models.Model):
     email_polo = models.EmailField(verbose_name='E-mail Polo de Inovação', max_length=100, null=True)
     matricula = models.CharField(verbose_name='Matrícula', max_length=24, null=True)
     curso = models.CharField(max_length=100, null=True)
-    mentor = models.ForeignKey(
-        to='capacitacao.Mentor', on_delete=models.PROTECT, related_name='discentes_mentorados', null=True
-    )
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     cadastrado_por = models.ForeignKey(
