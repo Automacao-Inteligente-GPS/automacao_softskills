@@ -10,7 +10,7 @@ class SoftSkill(models.Model):
     cadastrado_por = models.ForeignKey(
         to='auth.User', on_delete=models.PROTECT, related_name='soft_skills_cadastradas', null=True
     )
-    atualizado_em = models.ForeignKey(
+    atualizado_por = models.ForeignKey(
         to='auth.User', on_delete=models.PROTECT, related_name='soft_skills_atualizadas', null=True
     )
 
