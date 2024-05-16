@@ -19,6 +19,12 @@ class AutoavaliacaoViewSet(ModelViewSet):
 
         return _queryset
 
+    def get_notas(self, autoavaliacao):
+        notas = {}
+        for nota_objeto in autoavaliacao.notas.all():
+            notas[nota_objeto.soft_skill.nome] = nota_objeto.nota
+        return notas
+
     def create(self, request, *args, **kwargs):
         _data = request.data
         _serializer = self.get_serializer_class()
@@ -30,5 +36,9 @@ class AutoavaliacaoViewSet(ModelViewSet):
             _autoavaliacao.atualizado_por = request.user
             _autoavaliacao.save()
             _serializer_response = _serializer(instance=_autoavaliacao)
+            _response = {
+                "aluno": _autoavaliacao.discente.nome,
+                "notas": [self.get_notas(_autoavaliacao)]
+            }
 
-            return Response(_serializer_response.data, status=HTTP_201_CREATED)
+            return Response(_response, status=HTTP_201_CREATED)

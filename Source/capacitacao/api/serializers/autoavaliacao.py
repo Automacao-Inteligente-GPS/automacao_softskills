@@ -124,6 +124,4 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                 atualizado_por=_usuario_logado
             )
 
-
-
         return _autoavaliacao_objeto
