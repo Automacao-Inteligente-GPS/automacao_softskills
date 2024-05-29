@@ -1,10 +1,16 @@
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework import permissions
 
 from capacitacao.api.serializers import CreateAutoavaliacaoSerializer
 from capacitacao.models import Autoavaliacao
 
+
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
 class AutoavaliacaoViewSet(ModelViewSet):
     http_method_names = ['post',]
 
@@ -19,11 +25,10 @@ class AutoavaliacaoViewSet(ModelViewSet):
 
         return _queryset
 
-    def get_notas(self, autoavaliacao):
-        notas = {}
+    def get_notas(self, autoavaliacao, _response):
         for nota_objeto in autoavaliacao.notas.all():
-            notas[nota_objeto.soft_skill.nome] = nota_objeto.nota
-        return notas
+            _response[nota_objeto.soft_skill.nome] = nota_objeto.nota
+        return _response
 
     def create(self, request, *args, **kwargs):
         _data = request.data
@@ -38,7 +43,8 @@ class AutoavaliacaoViewSet(ModelViewSet):
             _serializer_response = _serializer(instance=_autoavaliacao)
             _response = {
                 "aluno": _autoavaliacao.discente.nome,
-                "notas": [self.get_notas(_autoavaliacao)]
+                "autoavaliacao": _autoavaliacao.unidade
             }
+            _response = self.get_notas(_autoavaliacao, _response)
 
             return Response(_response, status=HTTP_201_CREATED)

@@ -18,7 +18,7 @@ PONTOS = {
 class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
     nome = serializers.CharField(required=True, write_only=True)
     email = serializers.EmailField(required=True, write_only=True)
-    matricula = serializers.CharField(required=True, write_only=True)
+    matricula = serializers.CharField(required=False, write_only=True)
     curso = serializers.CharField(required=True, write_only=True)
     mentor = serializers.CharField(required=True, write_only=True)
     projeto = serializers.CharField(required=True, write_only=True)
@@ -39,13 +39,13 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
         _usuario_logado = validated_data.pop('usuario_logado')
         _nome = validated_data.pop('nome').lower()
         _email = validated_data.pop('email').lower()
-        _matricula = validated_data.pop('matricula')
+        _matricula = validated_data.pop('matricula') if 'matricula' in validated_data else None
         _curso = validated_data.pop('curso').lower()
         _mentor = validated_data.pop('mentor').lower()
         _projeto = validated_data.pop('projeto')
         _data_entrada = validated_data.pop('data_entrada')
         _respostas = validated_data.pop('respostas')
-        _observacao = validated_data.pop('observacao')
+        _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
         _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
         _discente_objeto = Discente.objects.filter(
             Q(email_academico__iexact=_email) | Q(email_polo__iexact=_email)).distinct().first()

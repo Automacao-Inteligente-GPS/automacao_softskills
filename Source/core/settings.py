@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     # DJANGO EXTERNAL PACKAGES
     'rest_framework',
     'drf_spectacular',
+    'rest_framework.authtoken',
 
     # APPS
     'capacitacao',
@@ -128,7 +129,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
