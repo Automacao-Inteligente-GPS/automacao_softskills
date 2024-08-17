@@ -8,7 +8,6 @@ class Mentor(models.Model):
         ('P', 'PBL')
     )
 
-    # campos
     nome = models.CharField(max_length=100, null=True)
     tipo = models.CharField(verbose_name='Tipo do Mentor', max_length=1, choices=TIPO, null=True)
     email_ifpb = models.EmailField(verbose_name='E-mail Ifpb', max_length=100, null=True)

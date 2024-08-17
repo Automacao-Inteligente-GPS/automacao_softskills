@@ -1,27 +1,29 @@
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework import permissions
 
-from capacitacao.api.serializers import CreateAutoavaliacaoSerializer
-from capacitacao.models import Autoavaliacao
+from capacitacao.api.serializers import CreateAutoavaliacaoSerializer, ListAutoavaliacaoSerializer
+from capacitacao.models import Autoavaliacao, Discente
 
 
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 class AutoavaliacaoViewSet(ModelViewSet):
-    http_method_names = ['post',]
+    http_method_names = ['post']
 
     def get_serializer_class(self):
-        return CreateAutoavaliacaoSerializer
+        if self.request.method == 'POST':
+            return CreateAutoavaliacaoSerializer
+        return ListAutoavaliacaoSerializer
 
     def get_queryset(self):
-        autoavaliacao = self.request.GET.get('autoavaliacao_id', None)
-        _queryset = Autoavaliacao.objects.filter(
-            id=autoavaliacao
-        ) if autoavaliacao else Autoavaliacao.objects.all()
+        _queryset = Discente.objects.get(
+            id=self.request.GET.get('discente', None)
+        ) if 'discente' in self.request.GET else Discente.objects.none()
 
         return _queryset
 
@@ -48,3 +50,12 @@ class AutoavaliacaoViewSet(ModelViewSet):
             _response = self.get_notas(_autoavaliacao, _response)
 
             return Response(_response, status=HTTP_201_CREATED)
+
+
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+class DiscenteDetailView(RetrieveAPIView):
+
+    queryset = Discente.objects.all()
+    serializer_class = ListAutoavaliacaoSerializer
+    lookup_field = 'id'

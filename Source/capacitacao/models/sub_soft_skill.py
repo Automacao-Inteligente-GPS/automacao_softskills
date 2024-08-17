@@ -9,11 +9,11 @@ class SubSoftSkill(models.Model):
         to='capacitacao.SoftSkill', on_delete=models.PROTECT, related_name='soft_skill', null=True
     )
     cadastrado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
+    atualizado_em = models.DateTimeField(auto_now=True, null=True)
     cadastrado_por = models.ForeignKey(
         to='auth.User', on_delete=models.PROTECT, related_name='sub_soft_skills_cadastradas', null=True
     )
-    atualizado_em = models.ForeignKey(
+    atualizado_por = models.ForeignKey(
         to='auth.User', on_delete=models.PROTECT, related_name='sub_soft_skills_atualizadas', null=True
     )
 

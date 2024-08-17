@@ -20,8 +20,9 @@ class Migration(migrations.Migration):
                 ('nome', models.CharField(max_length=100, null=True)),
                 ('status', models.BooleanField(default=True)),
                 ('cadastrado_em', models.DateTimeField(auto_now_add=True)),
-                ('atualizado_em', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='soft_skills_atualizadas', to=settings.AUTH_USER_MODEL)),
+                ('atualizado_em', models.DateTimeField(auto_now=True)),
                 ('cadastrado_por', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='soft_skills_cadastradas', to=settings.AUTH_USER_MODEL)),
+                ('atualizado_por', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='soft_skills_atualizadas', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'Soft Skill',

@@ -1,5 +1,7 @@
 from django.db.models import Q, Max
 from rest_framework import serializers
+import datetime
+
 
 from capacitacao.models import (
     Autoavaliacao, Discente, Mentor,
@@ -8,22 +10,22 @@ from capacitacao.models import (
 )
 
 PONTOS = {
-    'inexistente': 1,
+    'inexistente': 0,
+    'inicialmente': 1,
     'parcialmente': 2,
     'adequadamente': 3,
     'totalmente': 4
 }
 
-
 class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
     nome = serializers.CharField(required=True, write_only=True)
     email = serializers.EmailField(required=True, write_only=True)
-    matricula = serializers.CharField(required=False, write_only=True)
+    matricula = serializers.CharField(required=False, write_only=True, allow_blank=True)
     curso = serializers.CharField(required=True, write_only=True)
     mentor = serializers.CharField(required=True, write_only=True)
     projeto = serializers.CharField(required=True, write_only=True)
-    data_entrada = serializers.DateField(required=True, write_only=True)
-    observacao = serializers.CharField(required=False)
+    data_entrada = serializers.CharField(required=True, write_only=True)
+    observacao = serializers.CharField(required=False, allow_blank=True)
     respostas = serializers.DictField(child=serializers.ListField(), write_only=True)
 
     class Meta:
@@ -43,7 +45,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
         _curso = validated_data.pop('curso').lower()
         _mentor = validated_data.pop('mentor').lower()
         _projeto = validated_data.pop('projeto')
-        _data_entrada = validated_data.pop('data_entrada')
+        _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
         _respostas = validated_data.pop('respostas')
         _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
         _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
@@ -125,3 +127,33 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
             )
 
         return _autoavaliacao_objeto
+
+
+class AutoavaliacaoNotaSerializer(serializers.ModelSerializer):
+    softskill = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AutoavaliacaoNota
+        fields = ['id', 'nota', 'softskill']
+
+    def get_softskill(self, obj):
+        return obj.soft_skill.nome
+
+
+class AutoavaliacaoSerializer(serializers.ModelSerializer):
+    notas = AutoavaliacaoNotaSerializer(many=True)
+    cadastrado_em = serializers.DateTimeField(
+        format='%d/%m/%Y',
+    )
+
+    class Meta:
+        model = Autoavaliacao
+        fields = ['id', 'unidade', 'cadastrado_em', 'notas']
+
+
+class ListAutoavaliacaoSerializer(serializers.ModelSerializer):
+    autoavaliacoes = AutoavaliacaoSerializer(many=True)
+
+    class Meta:
+        model = Discente
+        fields = ['id', 'nome', 'autoavaliacoes']
