@@ -17,15 +17,14 @@ PONTOS = {
     'totalmente': 4
 }
 
-
 class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
     nome = serializers.CharField(required=True, write_only=True)
     email = serializers.EmailField(required=True, write_only=True)
     matricula = serializers.CharField(required=False, write_only=True, allow_blank=True)
-    curso = serializers.CharField(required=False, write_only=True, allow_blank=True)
+    curso = serializers.CharField(required=True, write_only=True)
     mentor = serializers.CharField(required=True, write_only=True)
-    projeto = serializers.CharField(required=False, write_only=True, allow_blank=True)
-    data_entrada = serializers.CharField(required=False, write_only=True, allow_blank=True)
+    projeto = serializers.CharField(required=True, write_only=True)
+    data_entrada = serializers.CharField(required=True, write_only=True)
     observacao = serializers.CharField(required=False, allow_blank=True)
     respostas = serializers.DictField(child=serializers.ListField(), write_only=True)
 
@@ -43,13 +42,10 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
         _nome = validated_data.pop('nome').lower()
         _email = validated_data.pop('email').lower()
         _matricula = validated_data.pop('matricula') if 'matricula' in validated_data else None
-        _curso = validated_data.pop('curso').lower() if 'curso' in validated_data else None
+        _curso = validated_data.pop('curso').lower()
         _mentor = validated_data.pop('mentor').lower()
-        _projeto = validated_data.pop('projeto') if 'projeto' in validated_data else None
-        if '_data_entrada' in validated_data:
-            _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
-        else:
-            _data_entrada = None
+        _projeto = validated_data.pop('projeto')
+        _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
         _respostas = validated_data.pop('respostas')
         _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
         _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
@@ -120,13 +116,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                 )
 
             for resposta in respostas:
-                pontuacao = PONTOS.get(resposta.lower(), None)
-
-                if not pontuacao:
-                    pontuacao = PONTOS.get(resposta.lower().split(':')[0], None)
-
-                nota += pontuacao
-
+                nota += PONTOS[resposta.lower()]
             nota = nota / len(respostas)
             AutoavaliacaoNota.objects.create(
                 nota=nota,
