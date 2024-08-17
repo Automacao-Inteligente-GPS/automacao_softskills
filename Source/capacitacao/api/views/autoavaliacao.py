@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework import permissions
@@ -34,6 +34,7 @@ class AutoavaliacaoViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         _data = request.data
+
         _serializer = self.get_serializer_class()
         _serializer_data = _serializer(data=_data)
 
@@ -50,6 +51,7 @@ class AutoavaliacaoViewSet(ModelViewSet):
             _response = self.get_notas(_autoavaliacao, _response)
 
             return Response(_response, status=HTTP_201_CREATED)
+        return Response(_serializer_data.errors, status=HTTP_400_BAD_REQUEST)
 
 
 @authentication_classes([SessionAuthentication, TokenAuthentication])
