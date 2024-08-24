@@ -152,8 +152,12 @@ class AutoavaliacaoSerializer(serializers.ModelSerializer):
 
 
 class ListAutoavaliacaoSerializer(serializers.ModelSerializer):
+    data_entrada = serializers.SerializerMethodField()
     autoavaliacoes = AutoavaliacaoSerializer(many=True)
 
     class Meta:
         model = Discente
-        fields = ['id', 'nome', 'autoavaliacoes']
+        fields = ['id', 'nome', 'autoavaliacoes', 'data_entrada']
+
+    def get_data_entrada(self, obj):
+        return obj.discente_projetos.last().data_entrada if obj.discente_projetos.exists() else ''
