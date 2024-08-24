@@ -1,13 +1,17 @@
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework import permissions
 
 from capacitacao.api.serializers import CreateAutoavaliacaoSerializer, ListAutoavaliacaoSerializer
-from capacitacao.models import Autoavaliacao, Discente
+from capacitacao.models import (
+    Autoavaliacao, Discente, AutoavaliacaoNota,
+    DiscenteProjeto, Mentor, Projeto,
+    SoftSkill, SubSoftSkill)
 
 
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -61,3 +65,19 @@ class DiscenteDetailView(RetrieveAPIView):
     queryset = Discente.objects.all()
     serializer_class = ListAutoavaliacaoSerializer
     lookup_field = 'id'
+
+
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+class DeleteAllRecordsAPIView(APIView):
+    def delete(self, request, *args, **kwargs):
+        AutoavaliacaoNota.objects.all().delete()
+        Autoavaliacao.objects.all().delete()
+        SubSoftSkill.objects.all().delete()
+        SoftSkill.objects.all().delete()
+        DiscenteProjeto.objects.all().delete()
+        Projeto.objects.all().delete()
+        Discente.objects.all().delete()
+        Mentor.objects.all().delete()
+
+        return Response({"message": "Todos os registros foram apagados."}, status=HTTP_204_NO_CONTENT)
