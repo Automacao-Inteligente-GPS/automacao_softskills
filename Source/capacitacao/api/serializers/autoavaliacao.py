@@ -117,7 +117,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                     )
 
                 for resposta in respostas:
-                    nota += PONTOS[resposta.lower()]
+                    nota += PONTOS.get(resposta.lower(), 0)
                 nota = nota / len(respostas)
                 AutoavaliacaoNota.objects.create(
                     nota=nota,
