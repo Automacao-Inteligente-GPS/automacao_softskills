@@ -38,95 +38,98 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        _usuario_logado = validated_data.pop('usuario_logado')
-        _nome = validated_data.pop('nome').lower()
-        _email = validated_data.pop('email').lower()
-        _matricula = validated_data.pop('matricula') if 'matricula' in validated_data else None
-        _curso = validated_data.pop('curso').lower()
-        _mentor = validated_data.pop('mentor').lower()
-        _projeto = validated_data.pop('projeto')
-        _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
-        _respostas = validated_data.pop('respostas')
-        _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
-        _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
-        _discente_objeto = Discente.objects.filter(
-            Q(email_academico__iexact=_email) | Q(email_polo__iexact=_email)).distinct().first()
-        _projeto_objeto = Projeto.objects.filter(nome__iexact=_projeto).first()
+        try:
+            _usuario_logado = validated_data.pop('usuario_logado')
+            _nome = validated_data.pop('nome').lower()
+            _email = validated_data.pop('email').lower()
+            _matricula = validated_data.pop('matricula') if 'matricula' in validated_data else None
+            _curso = validated_data.pop('curso').lower()
+            _mentor = validated_data.pop('mentor').lower()
+            _projeto = validated_data.pop('projeto')
+            _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
+            _respostas = validated_data.pop('respostas')
+            _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
 
-        if not _mentor_objeto:
-            _mentor_objeto = Mentor.objects.create(
-                nome=_mentor,
-                cadastrado_por=_usuario_logado,
-                atualizado_por=_usuario_logado,
-            )
+            _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
+            _discente_objeto = Discente.objects.filter(matricula=_matricula).first()
+            _projeto_objeto = Projeto.objects.filter(nome__iexact=_projeto).first()
 
-        if not _discente_objeto:
-            _discente_objeto = Discente.objects.create(
-                nome=_nome,
-                email_academico=_email,
-                matricula=_matricula,
-                curso=_curso,
-                cadastrado_por=_usuario_logado,
-                atualizado_por=_usuario_logado,
-            )
-        else:
-            _discente_objeto.nome = _nome
-            _discente_objeto.curso = _curso
-            _discente_objeto.atualizado_por = _usuario_logado
-            _discente_objeto.save()
+            if not _mentor_objeto:
+                _mentor_objeto = Mentor.objects.create(
+                    nome=_mentor,
+                    cadastrado_por=_usuario_logado,
+                    atualizado_por=_usuario_logado,
+                )
 
-        if not _projeto_objeto:
-            _projeto_objeto = Projeto.objects.create(
-                nome=_projeto,
-                mentor_id=_mentor_objeto.id,
-                cadastrado_por=_usuario_logado,
-                atualizado_por=_usuario_logado,
-            )
-        else:
-            _projeto_objeto.mentor_id = _mentor_objeto.id
-            _projeto_objeto.atualizado_por = _usuario_logado
-            _projeto_objeto.save()
+            if not _discente_objeto:
+                _discente_objeto = Discente.objects.create(
+                    nome=_nome,
+                    email_academico=_email,
+                    matricula=_matricula,
+                    curso=_curso,
+                    cadastrado_por=_usuario_logado,
+                    atualizado_por=_usuario_logado,
+                )
+            else:
+                _discente_objeto.nome = _nome
+                _discente_objeto.curso = _curso
+                _discente_objeto.atualizado_por = _usuario_logado
+                _discente_objeto.save()
 
-        if not _discente_objeto.discente_projetos.filter(projeto=_projeto_objeto):
-            _discente_projeto_objeto = DiscenteProjeto.objects.create(
-                data_entrada=_data_entrada,
+            if not _projeto_objeto:
+                _projeto_objeto = Projeto.objects.create(
+                    nome=_projeto,
+                    mentor_id=_mentor_objeto.id,
+                    cadastrado_por=_usuario_logado,
+                    atualizado_por=_usuario_logado,
+                )
+            else:
+                _projeto_objeto.mentor_id = _mentor_objeto.id
+                _projeto_objeto.atualizado_por = _usuario_logado
+                _projeto_objeto.save()
+
+            if not _discente_objeto.discente_projetos.filter(projeto=_projeto_objeto):
+                _discente_projeto_objeto = DiscenteProjeto.objects.create(
+                    data_entrada=_data_entrada,
+                    discente_id=_discente_objeto.id,
+                    projeto_id=_projeto_objeto.id,
+                    cadastrado_por=_usuario_logado,
+                    atualizado_por=_usuario_logado,
+                )
+
+            _unidade = _discente_objeto.autoavaliacoes.aggregate(Max('unidade'))['unidade__max']
+            _autoavaliacao_objeto = Autoavaliacao.objects.create(
+                unidade=_unidade + 1 if _unidade else 1,
+                observacao=_observacao,
                 discente_id=_discente_objeto.id,
-                projeto_id=_projeto_objeto.id,
                 cadastrado_por=_usuario_logado,
                 atualizado_por=_usuario_logado,
             )
 
-        _unidade = _discente_objeto.autoavaliacoes.aggregate(Max('unidade'))['unidade__max']
-        _autoavaliacao_objeto = Autoavaliacao.objects.create(
-            unidade=_unidade + 1 if _unidade else 1,
-            observacao=_observacao,
-            discente_id=_discente_objeto.id,
-            cadastrado_por=_usuario_logado,
-            atualizado_por=_usuario_logado,
-        )
+            for softskill, respostas in _respostas.items():
+                nota = 0
+                _softskill_objeto = SoftSkill.objects.filter(nome__iexact=softskill.lower()).first()
+                if not _softskill_objeto:
+                    _softskill_objeto = SoftSkill.objects.create(
+                        nome=softskill.lower(),
+                        cadastrado_por=_usuario_logado,
+                        atualizado_por=_usuario_logado
+                    )
 
-        for softskill, respostas in _respostas.items():
-            nota = 0
-            _softskill_objeto = SoftSkill.objects.filter(nome__iexact=softskill.lower()).first()
-            if not _softskill_objeto:
-                _softskill_objeto = SoftSkill.objects.create(
-                    nome=softskill.lower(),
+                for resposta in respostas:
+                    nota += PONTOS[resposta.lower()]
+                nota = nota / len(respostas)
+                AutoavaliacaoNota.objects.create(
+                    nota=nota,
+                    autoavaliacao_id=_autoavaliacao_objeto.id,
+                    soft_skill_id=_softskill_objeto.id,
                     cadastrado_por=_usuario_logado,
                     atualizado_por=_usuario_logado
                 )
 
-            for resposta in respostas:
-                nota += PONTOS[resposta.lower()]
-            nota = nota / len(respostas)
-            AutoavaliacaoNota.objects.create(
-                nota=nota,
-                autoavaliacao_id=_autoavaliacao_objeto.id,
-                soft_skill_id=_softskill_objeto.id,
-                cadastrado_por=_usuario_logado,
-                atualizado_por=_usuario_logado
-            )
-
-        return _autoavaliacao_objeto
+            return _autoavaliacao_objeto
+        except:
+            return Autoavaliacao.objects.create()
 
 
 class AutoavaliacaoNotaSerializer(serializers.ModelSerializer):
