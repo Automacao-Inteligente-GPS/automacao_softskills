@@ -31,7 +31,7 @@ class AutoavaliacaoViewSet(ModelViewSet):
         return _queryset
 
     def get_notas(self, autoavaliacao, _response):
-        for nota_objeto in autoavaliacao.notas.all():
+        for nota_objeto in autoavaliacao.notas.filter(soft_skill__isnull=False):
             _response[nota_objeto.soft_skill.nome] = nota_objeto.nota
         return _response
 

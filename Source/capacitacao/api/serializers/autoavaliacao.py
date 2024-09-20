@@ -6,7 +6,7 @@ import datetime
 from capacitacao.models import (
     Autoavaliacao, Discente, Mentor,
     Projeto, DiscenteProjeto, AutoavaliacaoNota,
-    SoftSkill
+    SoftSkill, SubSoftSkill
 )
 
 PONTOS = {
@@ -27,6 +27,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
     data_entrada = serializers.CharField(required=True, write_only=True)
     observacao = serializers.CharField(required=False, allow_blank=True)
     respostas = serializers.DictField(child=serializers.ListField(), write_only=True)
+    respostas_subsoft_skills = serializers.DictField(child=serializers.DictField(child=serializers.ListField()), write_only=True)
 
     class Meta:
         model = Autoavaliacao
@@ -34,7 +35,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
             'id', 'nome', 'email',
             'curso', 'mentor', 'matricula',
             'projeto', 'data_entrada', 'respostas',
-            'observacao',
+            'respostas_subsoft_skills', 'observacao',
         )
 
     def create(self, validated_data):
@@ -48,6 +49,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
             _projeto = validated_data.pop('projeto')
             _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")
             _respostas = validated_data.pop('respostas')
+            _respostas_subsoft_skills = validated_data.pop('respostas_subsoft_skills') if 'respostas_subsoft_skills' in validated_data else None
             _observacao = validated_data.pop('observacao') if 'observacao' in validated_data else None
 
             _mentor_objeto = Mentor.objects.filter(nome__iexact=_mentor).first()
@@ -127,6 +129,45 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                     atualizado_por=_usuario_logado
                 )
 
+            for softskill, sub_softskills in _respostas_subsoft_skills.items():
+                _softskill_objeto = SoftSkill.objects.filter(nome__iexact=softskill.lower()).first()
+                notas = []
+                if not _softskill_objeto:
+                    _softskill_objeto = SoftSkill.objects.create(
+                        nome=softskill.lower(),
+                        cadastrado_por=_usuario_logado,
+                        atualizado_por=_usuario_logado
+                    )
+                for sub_softskill, respostas in sub_softskills.items():
+                    _sub_softskill_objeto = SubSoftSkill.objects.filter(nome__iexact=sub_softskill.lower()).first()
+                    if not _sub_softskill_objeto:
+                        _sub_softskill_objeto = SubSoftSkill.objects.create(
+                            nome=sub_softskill.lower(),
+                            soft_skill_id=_softskill_objeto.id,
+                            cadastrado_por=_usuario_logado,
+                            atualizado_por=_usuario_logado
+                        )
+
+                    for resposta in respostas:
+                        nota += PONTOS.get(resposta.lower(), 0)
+                    nota = nota / len(respostas)
+                    notas.append(nota)
+                    AutoavaliacaoNota.objects.create(
+                        nota=nota,
+                        autoavaliacao_id=_autoavaliacao_objeto.id,
+                        sub_soft_skill_id=_sub_softskill_objeto.id,
+                        cadastrado_por=_usuario_logado,
+                        atualizado_por=_usuario_logado
+                    )
+
+                AutoavaliacaoNota.objects.create(
+                    nota=sum(notas)/len(notas),
+                    autoavaliacao_id=_autoavaliacao_objeto.id,
+                    soft_skill_id=_softskill_objeto.id,
+                    cadastrado_por=_usuario_logado,
+                    atualizado_por=_usuario_logado
+                )
+
             return _autoavaliacao_objeto
         except:
             return Autoavaliacao.objects.create()
@@ -140,18 +181,30 @@ class AutoavaliacaoNotaSerializer(serializers.ModelSerializer):
         fields = ['id', 'nota', 'softskill']
 
     def get_softskill(self, obj):
-        return obj.soft_skill.nome
+        if obj.sub_soft_skill:
+            return obj.sub_soft_skill.nome
+        else:
+            return obj.soft_skill.nome
 
 
 class AutoavaliacaoSerializer(serializers.ModelSerializer):
-    notas = AutoavaliacaoNotaSerializer(many=True)
+    notas = serializers.SerializerMethodField()
+    notas_sub_softskill = serializers.SerializerMethodField()
     cadastrado_em = serializers.DateTimeField(
         format='%d/%m/%Y',
     )
 
     class Meta:
         model = Autoavaliacao
-        fields = ['id', 'unidade', 'cadastrado_em', 'notas']
+        fields = ['id', 'unidade', 'cadastrado_em', 'notas', 'notas_sub_softskill']
+
+    def get_notas(self, obj):
+        notas_filtradas = obj.notas.filter(soft_skill__isnull=False)
+        return AutoavaliacaoNotaSerializer(notas_filtradas, many=True).data
+
+    def get_notas_sub_softskill(self, obj):
+        notas_filtradas = obj.notas.filter(sub_soft_skill__isnull=False)
+        return AutoavaliacaoNotaSerializer(notas_filtradas, many=True).data
 
 
 class ListAutoavaliacaoSerializer(serializers.ModelSerializer):
