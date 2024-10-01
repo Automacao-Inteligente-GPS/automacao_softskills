@@ -140,6 +140,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                     )
                 for sub_softskill, respostas in sub_softskills.items():
                     _sub_softskill_objeto = SubSoftSkill.objects.filter(nome__iexact=sub_softskill.lower()).first()
+                    nota = 0
                     if not _sub_softskill_objeto:
                         _sub_softskill_objeto = SubSoftSkill.objects.create(
                             nome=sub_softskill.lower(),
@@ -150,10 +151,10 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
 
                     for resposta in respostas:
                         nota += PONTOS.get(resposta.lower(), 0)
-                    nota = nota / len(respostas)
-                    notas.append(nota)
+                    nota_final = nota / len(respostas)
+                    notas.append(nota_final)
                     AutoavaliacaoNota.objects.create(
-                        nota=nota,
+                        nota=nota_final,
                         autoavaliacao_id=_autoavaliacao_objeto.id,
                         sub_soft_skill_id=_sub_softskill_objeto.id,
                         cadastrado_por=_usuario_logado,
