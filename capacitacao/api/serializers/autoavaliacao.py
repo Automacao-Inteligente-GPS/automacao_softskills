@@ -21,7 +21,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
     nome = serializers.CharField(required=True, write_only=True)
     email = serializers.EmailField(required=True, write_only=True)
     matricula = serializers.CharField(required=False, write_only=True, allow_blank=True)
-    curso = serializers.CharField(required=True, write_only=True)
+    curso = serializers.CharField(required=False, write_only=True, allow_blank=True)
     mentor = serializers.CharField(required=True, write_only=True)
     projeto = serializers.CharField(required=True, write_only=True)
     data_entrada = serializers.CharField(required=True, write_only=True)
@@ -44,7 +44,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
             _nome = validated_data.pop('nome').lower()
             _email = validated_data.pop('email').lower()
             _matricula = validated_data.pop('matricula') if 'matricula' in validated_data else None
-            _curso = validated_data.pop('curso').lower()
+            _curso = validated_data.pop('curso').lower() if 'curso' in validated_data else None
             _mentor = validated_data.pop('mentor').lower()
             _projeto = validated_data.pop('projeto')
             _data_entrada = datetime.datetime.strptime(validated_data.pop('data_entrada'), "%d/%m/%Y").strftime("%Y-%m-%d")

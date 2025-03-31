@@ -54,7 +54,6 @@ class AutoavaliacaoViewSet(ModelViewSet):
 
             return Response(_response, status=HTTP_201_CREATED)
 
-
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 class DiscenteDetailView(RetrieveAPIView):
