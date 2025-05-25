@@ -119,7 +119,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                     )
 
                 for resposta in respostas:
-                    nota += PONTOS.get(resposta.lower(), 0)
+                    nota += PONTOS.get(resposta.split(':')[0].lower(), 0)
                 nota = nota / len(respostas)
                 AutoavaliacaoNota.objects.create(
                     nota=nota,
@@ -150,7 +150,7 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                         )
 
                     for resposta in respostas:
-                        nota += PONTOS.get(resposta.lower(), 0)
+                        nota += PONTOS.get(resposta.split(':')[0].lower(), 0)
                     nota_final = nota / len(respostas)
                     notas.append(nota_final)
                     AutoavaliacaoNota.objects.create(
@@ -170,7 +170,8 @@ class CreateAutoavaliacaoSerializer(serializers.ModelSerializer):
                 )
 
             return _autoavaliacao_objeto
-        except:
+        except Exception as e:
+            print(e)
             return Autoavaliacao.objects.create()
 
 
