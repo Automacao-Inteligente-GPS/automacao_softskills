@@ -43,6 +43,16 @@ class Discente(models.Model):
                 DiscenteProjeto.objects.filter(
                     discente=OuterRef('pk')
                 ).order_by('-cadastrado_em').values('projeto__mentor__email_polo')[:1]
+            ),
+            mentor_nome=Subquery(
+                DiscenteProjeto.objects.filter(
+                    discente=OuterRef('pk')
+                ).order_by('-cadastrado_em').values('projeto__mentor__nome')[:1]
+            ),
+            projeto_nome=Subquery(
+                DiscenteProjeto.objects.filter(
+                    discente=OuterRef('pk')
+                ).order_by('-cadastrado_em').values('projeto__nome')[:1]
             )
         ).prefetch_related('discente_projetos', 'discente_projetos__projeto', 'discente_projetos__projeto__mentor').distinct()
 
